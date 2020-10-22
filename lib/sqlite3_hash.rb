@@ -5,7 +5,7 @@ require "sqlite3_hash/version"
 # See License:	http://MarginalHacks.com/License/
 # Description:	An sqlite3 backed simple hash in ruby
 #
-# Handles values of String, Fixnum, Float, and anything that can be Marshalled
+# Handles values of String, Integer, Float, and anything that can be Marshalled
 # Keys are anything that can be Marshalled
 # This means, for example, that you cannot store Procs in an SQLite3Hash
 #
@@ -26,6 +26,7 @@ require "sqlite3_hash/version"
 require 'sqlite3'
 
 class SQLite3Hash
+  include Enumerable
 	class MissingDBPath < StandardError
 		def initialize(msg="Need to specify DB path for SQLite3Hash") super; end
 	end
@@ -98,7 +99,7 @@ class SQLite3Hash
 		rows = {
 			'valueString' => nil,
 			'valueSymbol' => nil,
-			'valueFixnum' => nil,
+			'valueInteger' => nil,
 			'valueFloat' => nil,
 			'valueMarshal' => nil,
 		}
@@ -349,7 +350,7 @@ class SQLite3Hash
 		end
 		def rowValue(value)
 			c = value.class
-			return ["value#{c.to_s}",value] if c==Fixnum || c==String || c==Float
+			return ["value#{c.to_s}",value] if c==Integer || c==String || c==Float
 			return ["value#{c.to_s}",value.to_s] if c==Symbol
 			return ["valueMarshal",Marshal.dump(value)]
 		end
@@ -360,7 +361,7 @@ class SQLite3Hash
 		def createTable(h=Hash.new)
 			# Check if table exists
 			return if @sqldb.get_first_value( %{select name from sqlite_master where name = :name}, {:name => @table} )
-			@sqldb.execute("create table '#{@table}' (key TEXT not null unique, valueString TEXTS, valueFixnum INTEGER, valueFloat REAL, valueSymbol TEXTS, valueMarshal TEXTS)")
+			@sqldb.execute("create table '#{@table}' (key TEXT not null unique, valueString TEXTS, valueInteger INTEGER, valueFloat REAL, valueSymbol TEXTS, valueMarshal TEXTS)")
 			h.each { |k,v| set(k,v) } if h
 		end
 end
